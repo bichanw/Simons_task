@@ -1,4 +1,4 @@
-% Clear the workspace and the screen
+3% Clear the workspace and the screen
 
 sca;
 close all;
@@ -89,7 +89,7 @@ DiscPtr = CreateProceduralSmoothedDisc(w, discInfo.r*2, discInfo.r*2 , [], discI
 
 
 P_reds = [0.7 0.5 0.3];
-% for iTrial 
+for iTrial = 1
 
 	
 	l.delay = rand*800 + 400;
@@ -141,15 +141,16 @@ P_reds = [0.7 0.5 0.3];
 	Screen('DrawText',w,'Which is more?',center_rect(1)-100,center_rect(2)-100);
 	Screen('FillRect',w,[255 0 0; 0 255 0]',respdisc_rect'); % left red, right green
 	Screen('Flip', w);
-	[rt(1),resp(1)] = GetResp(Inf);
+	[rt(iTrial,1),resp(iTrial,1)] = GetResp(Inf);
 	WaitSecs(0.5);
+	
 
 	% confidence level
 	Screen('DrawText',w,'Rate your confidence (1-5)',center_rect(1)-150,center_rect(2)-25);
 	Screen('Flip', w);
-	[rt(2),resp(2)] = GetResp(Inf);
+	[rt(iTrial,2),resp(iTrial,2)] = GetResp(Inf);
 
-% end
+end
 
 
 % making demo
@@ -162,7 +163,7 @@ P_reds = [0.7 0.5 0.3];
 
 % Now we have drawn to the screen we wait for a keyboard button press (any
 % key) to terminate the demo. For help see: help KbStrokeWait
-KbStrokeWait;
+% KbStrokeWait;
 
 % Clear the screen. "sca" is short hand for "Screen CloseAll". This clears
 % all features related to PTB. Note: we leave the variables in the

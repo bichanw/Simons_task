@@ -7,13 +7,21 @@ function [x,y,color] =  gen_dots(d,n_dots,p_red)
 % n_dots = 50;
 % p_red = 1;
 
-% generate dot location
-loc_index = randperm(d^2,round(n_dots / pi * 4)); % randomly selecting location index
-[y,x] = ind2sub([d d], loc_index);
-y = y - d/2; x = x - d/2;
+while true
+	% generate dot location
+	loc_index = randperm(d^2,round(n_dots*1.5)); % randomly selecting location index; round(n_dots / pi * 4)=1.27
+	[y,x] = ind2sub([d d], loc_index);
+	y = y - d/2; x = x - d/2;
 
-% constrain inside a circle
-dot_oi = (x.^2 + y.^2)<=(d/2)^2;
+	% constrain inside a circle
+	dot_oi = (x.^2 + y.^2)<=(d/2)^2;
+
+	% make sure there's enough number of dots
+	if sum(dot_oi)>= n_dots
+		break;
+	end
+end
+dot_oi(find(dot_oi,sum(dot_oi)-n_dots)) = false;
 x = x(dot_oi); y = y(dot_oi);
 
 % generate color index
