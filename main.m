@@ -44,17 +44,21 @@ discInfo.lum = 200;
 discInfo.d2gabor = 65; % distance to gabor in pixel
 discInfo.sigma = 20;
 
+
+% response instruction
+respdisc_rect = [CenterRect_bw([-120 -20 -80 20],center_rect); CenterRect_bw([80 -20 120 20],center_rect)];
+
 % square out side gabor + disc
-% sqInfo.h = 200;
-% sqInfo.w = 70;
-% sqInfo.w_frame = 0;
-% sqInfo.c_in = 128;
-% sqInfo.x = gaborInfo.x;
-% sqInfo.y = gaborInfo.y;
+sqInfo.h = 200;
+sqInfo.w = 70;
+sqInfo.w_frame = 0;
+sqInfo.c_in = 128;
+sqInfo.x = gaborInfo.x;
+sqInfo.y = gaborInfo.y;
 
 
 
-% ------ initation ------ %
+% ------ initiation ------ %
 
 % location transformation
 fix_rect   = CenterRect_bw(fix_rect,center_rect);
@@ -85,7 +89,7 @@ DiscPtr = CreateProceduralSmoothedDisc(w, discInfo.r*2, discInfo.r*2 , [], discI
 
 
 P_reds = [0.7 0.5 0.3];
-for iTrial 
+% for iTrial 
 
 	
 	l.delay = rand*800 + 400;
@@ -109,28 +113,43 @@ for iTrial
 	Screen('FillRect',w,[0 0 0],fix_rect');
 	t_delay = Screen('Flip', w, t_dot+0.3);
 
-	% sample display
-	% Screen('FillRect',w,[255 0 0;0 250 0;ones(2,3)*sqInfo.c_in]',sq_rect'); % square, commented out
-	Screen('DrawTextures',w,DiscPtr,[],disc_rect',[],[],[],ones(1,3)*discInfo.lum);
-	Screen('DrawTextures',w,GratPtr,[],gabor_rect',gabor_ori,[],[],[],[],kPsychDontDoRotation,propertiesMat');
-	Screen('FillRect',w,[0 0 0],fix_rect');
-	t_sample = Screen('Flip', w, t_delay+l.delay);
+	% % sample display
+	% % Screen('FillRect',w,[255 0 0;0 250 0;ones(2,3)*sqInfo.c_in]',sq_rect'); % square, commented out
+	% Screen('DrawTextures',w,DiscPtr,[],disc_rect',[],[],[],ones(1,3)*discInfo.lum);
+	% Screen('DrawTextures',w,GratPtr,[],gabor_rect',gabor_ori,[],[],[],[],kPsychDontDoRotation,propertiesMat');
+	% Screen('FillRect',w,[0 0 0],fix_rect');
+	% t_sample = Screen('Flip', w, t_delay+l.delay);
 
-	% inter-display 
-	Screen('FillRect',w,[0 0 0],fix_rect');
-	t_idd = Screen('Flip', w, t_sample+0.2);
+	% % inter-display 
+	% Screen('FillRect',w,[0 0 0],fix_rect');
+	% t_idd = Screen('Flip', w, t_sample+0.2);
 
-	% probe display
-	% Screen('FillRect',w,[255 0 0;0 250 0;ones(2,3)*sqInfo.c_in]',sq_rect'); % square, commented out
-	Screen('DrawTextures',w,DiscPtr,[],disc_rect',[],[],[],ones(1,3)*discInfo.lum);
-	Screen('DrawTextures',w,GratPtr,[],gabor_rect',gabor_ori,[],[],[],[],kPsychDontDoRotation,propertiesMat');
-	Screen('FillRect',w,[0 0 0],fix_rect');
-	t_probe = Screen('Flip', w, t_idd+0.2);
+	% % probe display
+	% % Screen('FillRect',w,[255 0 0;0 250 0;ones(2,3)*sqInfo.c_in]',sq_rect'); % square, commented out
+	% Screen('DrawTextures',w,DiscPtr,[],disc_rect',[],[],[],ones(1,3)*discInfo.lum);
+	% Screen('DrawTextures',w,GratPtr,[],gabor_rect',gabor_ori,[],[],[],[],kPsychDontDoRotation,propertiesMat');
+	% Screen('FillRect',w,[0 0 0],fix_rect');
+	% t_probe = Screen('Flip', w, t_idd+0.2);
 
-	% saccade resp
-	Screen('FillRect',w,[0 0 0],fix_rect');
-	t_resp = Screen('Flip', w, t_probe+0.2);
-end
+	% % saccade resp
+	% Screen('FillRect',w,[0 0 0],fix_rect');
+	% t_resp = Screen('Flip', w, t_probe+0.2);
+
+
+	% ------ response ------ %
+	% red or green
+	Screen('DrawText',w,'Which is more?',center_rect(1)-100,center_rect(2)-100);
+	Screen('FillRect',w,[255 0 0; 0 255 0]',respdisc_rect'); % left red, right green
+	Screen('Flip', w);
+	[rt(1),resp(1)] = GetResp(Inf);
+	WaitSecs(0.5);
+
+	% confidence level
+	Screen('DrawText',w,'Rate your confidence (1-5)',center_rect(1)-150,center_rect(2)-25);
+	Screen('Flip', w);
+	[rt(2),resp(2)] = GetResp(Inf);
+
+% end
 
 
 % making demo
