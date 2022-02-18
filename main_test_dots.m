@@ -88,16 +88,28 @@ GratPtr = CreateProceduralGabor(w,gaborDimPix, gaborDimPix,[],[0.5 0.5 0.5 1],1)
 DiscPtr = CreateProceduralSmoothedDisc(w, discInfo.r*2, discInfo.r*2 , [], discInfo.r, discInfo.sigma);
 
 
-P_reds = 0.1:0.1:1;
-for iTrial = 1
+% set up staircase
+Rev = 0;
+StepSize = 0.03;
+resp_rw = [];
+Xnext = 0.6; Coherence = []; 
+P_reds = [];
+
+for iTrial = 1:1000
 
 	
-	l.delay = rand*800 + 400;
 
 	% ------ task ------ %
-	gabor_ori = -45;
-	p_red = 0.7; % proportion of red dots
-	[x,y,dotColor] = gen_dots(dotInfo.r*2,dotInfo.n,p_red);
+	Coherence(end+1) = Xnext;
+	more_red = randi(2)-1;
+	if more_red 
+		P_reds(end+1) = Coherence(end);
+		correct_resp = 80;
+	else
+		P_reds(end+1) = 1-Coherence(end);
+		correct_resp = 79;
+	end % randomly choosing from red or green
+	[x,y,dotColor] = gen_dots(dotInfo.r*2,dotInfo.n,P_reds(end));
 
 	% fixation point
 	Screen('FillRect',w,[0 0 0],fix_rect');
@@ -109,67 +121,86 @@ for iTrial = 1
 	t_dot = Screen('Flip', w, t_fix+1.0);
 
 
-	% delay period
+	% stimulu offset period
 	Screen('FillRect',w,[0 0 0],fix_rect');
 	t_delay = Screen('Flip', w, t_dot+0.3);
 
-	% % sample display
-	% % Screen('FillRect',w,[255 0 0;0 250 0;ones(2,3)*sqInfo.c_in]',sq_rect'); % square, commented out
-	% Screen('DrawTextures',w,DiscPtr,[],disc_rect',[],[],[],ones(1,3)*discInfo.lum);
-	% Screen('DrawTextures',w,GratPtr,[],gabor_rect',gabor_ori,[],[],[],[],kPsychDontDoRotation,propertiesMat');
-	% Screen('FillRect',w,[0 0 0],fix_rect');
-	% t_sample = Screen('Flip', w, t_delay+l.delay);
-
-	% % inter-display 
-	% Screen('FillRect',w,[0 0 0],fix_rect');
-	% t_idd = Screen('Flip', w, t_sample+0.2);
-
-	% % probe display
-	% % Screen('FillRect',w,[255 0 0;0 250 0;ones(2,3)*sqInfo.c_in]',sq_rect'); % square, commented out
-	% Screen('DrawTextures',w,DiscPtr,[],disc_rect',[],[],[],ones(1,3)*discInfo.lum);
-	% Screen('DrawTextures',w,GratPtr,[],gabor_rect',gabor_ori,[],[],[],[],kPsychDontDoRotation,propertiesMat');
-	% Screen('FillRect',w,[0 0 0],fix_rect');
-	% t_probe = Screen('Flip', w, t_idd+0.2);
-
-	% % saccade resp
-	% Screen('FillRect',w,[0 0 0],fix_rect');
-	% t_resp = Screen('Flip', w, t_probe+0.2);
 
 
 	% ------ response ------ %
 	% red or green
 	Screen('DrawText',w,'Which is more?',center_rect(1)-100,center_rect(2)-100);
 	Screen('FillRect',w,[255 0 0; 0 255 0]',respdisc_rect'); % left red, right green
-	Screen('Flip', w);
-	[rt(iTrial,1),resp(iTrial,1)] = GetResp(Inf);
+	Screen('Flip', w,t_dot+1);
+	[rt(iTrial),resp_lr(iTrial)] = GetResp(Inf);
 	WaitSecs(0.5);
-	
 
-	% confidence level
-	Screen('DrawText',w,'Rate your confidence (1-5)',center_rect(1)-150,center_rect(2)-25);
-	Screen('Flip', w);
-	[rt(iTrial,2),resp(iTrial,2)] = GetResp(Inf);
+	% apply staircase
+	resp_rw(end+1) = (resp_lr(end)==correct_resp);
+	[Xnext,Threshold,Rev,StepSize] = StairCase(Coherence,resp_rw,3,Rev,StepSize);
+	Xnext = max([Xnext 0.5]);
+	
+	if ~isnan(Threshold)
+		break;
+	end
+
+	% % confidence level
+	% Screen('DrawText',w,'Rate your confidence (1-5)',center_rect(1)-150,center_rect(2)-25);
+	% Screen('Flip', w);
+	% [rt(iTrial,2),resp(iTrial,2)] = GetResp(Inf);
 
 end
 
 
-% making demo
-% img = cat(4,img,Screen('GetImage',w));
-% mov([1:15 27:42 50:56 64:90])  = {squeeze(img(:,:,:,1))};
-% mov(16:26) = {squeeze(img(:,:,:,2))};
-% mov(43:49) = {squeeze(img(:,:,:,3))};
-% mov(57:63) = {squeeze(img(:,:,:,4))};
+NRepeats = 5;
+NLevels = 5;
+i_tr_start = numel(P_reds);
+newtrs = repmat(linspace(1-Threshold,Threshold,NLevels),1,NRepeats);
+P_reds = [P_reds newtrs(randperm(NRepeats*NLevels))];
+for iTrial = 1:(NRepeats*NLevels)
+
+	
+
+	% ------ task ------ %
+	[x,y,dotColor] = gen_dots(dotInfo.r*2,dotInfo.n,P_reds(i_tr_start+iTrial));
+
+	% fixation point
+	Screen('FillRect',w,[0 0 0],fix_rect');
+	t_fix = Screen('Flip', w);
+
+	% draw dot cloud
+	Screen('DrawDots', w, [(x+screenInfo.setRect(3)/2); (y+screenInfo.setRect(4)/2)], dotInfo.s, dotColor, [], 2);
+	Screen('FillRect',w,[0 0 0],fix_rect');
+	t_dot = Screen('Flip', w, t_fix+1.0);
 
 
-% Now we have drawn to the screen we wait for a keyboard button press (any
-% key) to terminate the demo. For help see: help KbStrokeWait
-% KbStrokeWait;
+	% stimulu offset period
+	Screen('FillRect',w,[0 0 0],fix_rect');
+	t_delay = Screen('Flip', w, t_dot+0.3);
 
-% Clear the screen. "sca" is short hand for "Screen CloseAll". This clears
-% all features related to PTB. Note: we leave the variables in the
-% workspace so you can have a look at them if you want.
-% For help see: help sca
+
+
+	% ------ response ------ %
+	% red or green
+	Screen('DrawText',w,'Which is more?',center_rect(1)-100,center_rect(2)-100);
+	Screen('FillRect',w,[255 0 0; 0 255 0]',respdisc_rect'); % left red, right green
+	Screen('Flip', w,t_dot+1);
+	[rt(end+1),resp_lr(end+1)] = GetResp(Inf);
+	resp_rw(end+1) = (resp_lr(end)==correct_resp);
+	WaitSecs(0.5);
+
+
+	% % confidence level
+	% Screen('DrawText',w,'Rate your confidence (1-5)',center_rect(1)-150,center_rect(2)-25);
+	% Screen('Flip', w);
+	% [rt(iTrial,2),resp(iTrial,2)] = GetResp(Inf);
+
+end
+
+
+
 sca;  
+
 
 
 function A = CenterRect_bw(A,c)
