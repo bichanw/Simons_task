@@ -5,7 +5,7 @@ close all;
 clear;
 
 % enter subject info
-subjectID = 'test';
+subjectID = 'test2';
 
 % Here we call some default settings for setting up Psychtoolbox
 HideCursor;
@@ -152,7 +152,7 @@ else
 		Screen('Flip', w,t_dot+1);
 		[rt(iTrial),resp_lr(iTrial)] = GetResp(Inf);
 		% exit program
-		if resp_lr(iTrial) == esc_key
+		if (resp_lr(iTrial) == esc_key)
 			sca;
 			return;
 		end
