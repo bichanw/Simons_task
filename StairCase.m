@@ -44,7 +44,7 @@ if  ismember(Rev,[1,3,7]) && Flag
     StepSize = StepSize/2;
 end
 
-if length(Resp)<6 || Rev<4
+if length(Resp)<6 || Rev<6
     Threshold = NaN;
 else
     Threshold = mean(Xprev(end-5:end));

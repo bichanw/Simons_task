@@ -5,7 +5,7 @@ close all;
 clear;
 
 % enter subject info
-subjectID = 'test3';
+subjectID = 'test2';
 
 % Here we call some default settings for setting up Psychtoolbox
 HideCursor;
@@ -122,14 +122,14 @@ else
 		% ------ task ------ %
 		Coherence(end+1) = Xnext;
 		P_reds(end+1) = Coherence(end);
-		more_red = randi(2)-1;
-		if more_red 
-			P_reds(end+1) = Coherence(end);
-			correct_resp = 80;
-		else
-			P_reds(end+1) = 1-Coherence(end);
-			correct_resp = 79;
-		end % randomly choosing from red or green
+		% more_red = randi(2)-1;
+		% if more_red 
+		% 	P_reds(end+1) = Coherence(end);
+		% 	correct_resp = 80;
+		% else
+		% 	P_reds(end+1) = 1-Coherence(end);
+		% 	correct_resp = 79;
+		% end % randomly choosing from red or green
 		[x,y,dotColor] = gen_dots(dotInfo.r*2,dotInfo.n,P_reds(end));
 
 		% fixation point
@@ -162,7 +162,8 @@ else
 		WaitSecs(0.5);
 
 		% apply staircase
-		resp_rw(end+1) = (resp_lr(end)==correct_resp);
+		% resp_rw(end+1) = (resp_lr(end)==correct_resp);
+		resp_rw(end+1) = (resp_lr(end)==80);
 		[Xnext,Threshold,Rev,StepSize] = StairCase(Coherence,resp_rw,3,Rev,StepSize);
 		Xnext = max([Xnext 0.5]);
 		
@@ -183,28 +184,18 @@ catch ME
 	rethrow(ME);
 	return
 end
+sca;
+return
 
-
-NTrials = 100;
-rt_rep = nan(NTrials,1); P_reds_rep = rt_rep; resp_lr_rep = rt_rep; 
-
-% initiation
-Coherences = linspace(0.5,Threshold,4); i_coherence = numel(Coherences);
-nright = 0;
-n2down = 2;
-for iTrial = 1:NTrials
+i_tr_start = numel(P_reds);
+newtrs = repmat(linspace(1-Threshold,Threshold,NLevels),1,NRepeats);
+rt_rep = nan(NRepeats*NLevels,1); resp_lr_rep = rt_rep; 
+P_reds_rep = newtrs(randperm(NRepeats*NLevels));
+for iTrial = 1:(NRepeats*NLevels)
 
 	
 
 	% ------ task ------ %
-	more_red = randi(2)-1;
-	if more_red 
-		P_reds_rep(iTrial) = Coherences(i_coherence);
-		correct_resp = 80;
-	else
-		P_reds_rep(iTrial) = 1-Coherences(i_coherence);
-		correct_resp = 79;
-	end % randomly choosing from red or green
 	[x,y,dotColor] = gen_dots(dotInfo.r*2,dotInfo.n,P_reds_rep(iTrial));
 
 	% fixation point
@@ -229,24 +220,10 @@ for iTrial = 1:NTrials
 	Screen('FillRect',w,[255 0 0; 0 255 0]',respdisc_rect'); % left red, right green
 	Screen('Flip', w,t_dot+1);
 	[rt_rep(iTrial),resp_lr_rep(iTrial)] = GetResp(Inf);
-	resp_rw = (resp_lr_rep(iTrial)==correct_resp);
 	if resp_lr_rep(iTrial) == esc_key
 		sca;
 		return;
 	end
-
-	% ------ staircase ------ %
-	if resp_rw % right response
-		nright = nright + 1;
-		if (nright>=n2down) % reset
-			nright = 0;
-			i_coherence = max([1 i_coherence-1]);
-		end
-	else % wrong response
-		nright = 0;
-		i_coherence = min([numel(Coherences) i_coherence+1]);
-	end
-	fprintf('%d right, %d i coherence\n',nright,i_coherence);
 	WaitSecs(0.5);
 
 
