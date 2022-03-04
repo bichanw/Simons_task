@@ -1,6 +1,6 @@
 % load all files
 clear;
-subjectID = 'test3';
+subjectID = 'test2';
 P_reds = []; resp_lr = []; rt = [];
 for iFile = 1:numel(dir(['Results/' subjectID '*']))-1
 	load(['Results/' subjectID '_' num2str(iFile) '.mat']);

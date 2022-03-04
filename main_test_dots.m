@@ -1,17 +1,17 @@
 % Clear the workspace and the screen
-
 sca;
 close all;
 clear;
 
 % enter subject info
-subjectID = 'test3';
+subjectID = 'test';
+starting_coherence = 0.6;
 
 % Here we call some default settings for setting up Psychtoolbox
 HideCursor;
 InitializeMatlabOpenGL;
 screenInfo.bckgnd = 128;
-screenInfo.setRect = [0 0 600 500];
+screenInfo.setRect = [];
 Screen('Preference', 'SkipSyncTests', 2 );
 [screenInfo.curWindow, screenInfo.screenRect] = Screen('OpenWindow', 0, screenInfo.bckgnd,screenInfo.setRect);
 ScreenCenter = [screenInfo.screenRect(3)/2 screenInfo.screenRect(4)/2];
@@ -105,12 +105,15 @@ end
 
 % set up staircase
 Rev = 0;
-StepSize = 0.02;
+StepSize = (starting_coherence-0.5)/5;
 resp_rw = [];
-Xnext = 0.6; Coherence = []; 
+Xnext = starting_coherence; Coherence = []; 
 P_reds = [];
 
 try
+if ~exist('Results')
+	mkdir('Results');
+end
 
 thresh_file = ['Results/' subjectID '_thresh.mat'];
 if exist(thresh_file)
@@ -178,18 +181,16 @@ else
 	end
 	save(thresh_file,'P_reds','Threshold','Coherence','rt','resp_lr','resp_rw');
 end
-catch ME
-	sca;
-	rethrow(ME);
-	return
-end
+
 
 
 NTrials = 100;
 rt_rep = nan(NTrials,1); P_reds_rep = rt_rep; resp_lr_rep = rt_rep; 
 
 % initiation
-Coherences = linspace(0.5,Threshold,4); i_coherence = numel(Coherences);
+Coherences = linspace(0.5,Threshold,4); 
+Coherences(end+1) = min([Coherences(end) + 0.1 1]);
+i_coherence = numel(Coherences);
 nright = 0;
 n2down = 2;
 for iTrial = 1:NTrials
@@ -260,6 +261,11 @@ end
 iFile = numel(dir(['Results/' subjectID '*']));
 save(['Results/' subjectID '_' num2str(iFile) '.mat'],'resp_lr_rep','rt_rep','P_reds_rep');
 
+catch ME
+	sca;
+	rethrow(ME);
+	return
+end
 
 sca;  
 
