@@ -96,12 +96,7 @@ GratPtr = CreateProceduralGabor(w,gaborDimPix, gaborDimPix,[],[0.5 0.5 0.5 1],1)
 DiscPtr = CreateProceduralSmoothedDisc(w, discInfo.r*2, discInfo.r*2 , [], discInfo.r, discInfo.sigma);
 
 % set up keyboard
-if ismac
-	esc_key = KbName('ESCAPE');
-else
-	esc_key = KbName('esc');
-end
-
+set_keys;
 
 % set up staircase
 Rev = 0;
@@ -128,10 +123,10 @@ else
 		more_red = randi(2)-1;
 		if more_red 
 			P_reds(end+1) = Coherence(end);
-			correct_resp = 80;
+			correct_resp = l_key;
 		else
 			P_reds(end+1) = 1-Coherence(end);
-			correct_resp = 79;
+			correct_resp = r_key;
 		end % randomly choosing from red or green
 		[x,y,dotColor] = gen_dots(dotInfo.r*2,dotInfo.n,P_reds(end));
 
@@ -201,10 +196,10 @@ for iTrial = 1:NTrials
 	more_red = randi(2)-1;
 	if more_red 
 		P_reds_rep(iTrial) = Coherences(i_coherence);
-		correct_resp = 80;
+		correct_resp = l_key;
 	else
 		P_reds_rep(iTrial) = 1-Coherences(i_coherence);
-		correct_resp = 79;
+		correct_resp = r_key;
 	end % randomly choosing from red or green
 	[x,y,dotColor] = gen_dots(dotInfo.r*2,dotInfo.n,P_reds_rep(iTrial));
 
