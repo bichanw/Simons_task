@@ -1,4 +1,8 @@
-function [rt,resp] = GetResp(dur)
+function [rt,resp] = GetResp(dur,resp_key)
+
+if nargin < 2
+    resp_key = [];
+end
 
 % initialization
 t_start = GetSecs;
@@ -8,7 +12,9 @@ Time = 0;
 while (Time < dur)
     Time = GetSecs - t_start;
     [~, ~, keyCode] = KbCheck;
-    if sum(keyCode)>0
+
+    % key is down 
+    if sum(keyCode)>0 && (isempty(resp_key) || sum(ismember(find(keyCode),resp_key)))
         resp = find(keyCode);
         rt   = Time;
         break;

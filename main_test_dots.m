@@ -180,7 +180,7 @@ end
 
 
 NTrials = 100;
-rt_rep = nan(NTrials,1); P_reds_rep = rt_rep; resp_lr_rep = rt_rep; 
+rt_rep = nan(NTrials,1); P_reds_rep = rt_rep; resp_lr_rep = rt_rep; confidence = rt_rep;
 
 % initiation
 Coherences = linspace(0.5,Threshold,4); 
@@ -231,6 +231,11 @@ for iTrial = 1:NTrials
 		return;
 	end
 
+	% confidence rating
+	Screen('DrawText',w,'How confident are you (1-5)?',center_rect(1)-150,center_rect(2)-50);
+	Screen('Flip', w);
+	[~,confidence(iTrial)] = GetResp(Inf,confidence_key);
+
 	% ------ staircase ------ %
 	if resp_rw % right response
 		nright = nright + 1;
@@ -246,6 +251,12 @@ for iTrial = 1:NTrials
 	WaitSecs(0.5);
 
 
+	if mod(iTrial,25)==0
+		Screen('DrawText',w,sprintf('Finish %d / 100 trial. Press any key to continue.', iTrial),center_rect(1)-150,center_rect(2)-50);
+		Screen('Flip', w);
+		KbStrokeWait;
+	end
+
 	% % confidence level
 	% Screen('DrawText',w,'Rate your confidence (1-5)',center_rect(1)-150,center_rect(2)-25);
 	% Screen('Flip', w);
@@ -254,7 +265,7 @@ for iTrial = 1:NTrials
 end
 
 iFile = numel(dir(['Results/' subjectID '*']));
-save(['Results/' subjectID '_' num2str(iFile) '.mat'],'resp_lr_rep','rt_rep','P_reds_rep');
+save(['Results/' subjectID '_' num2str(iFile) '.mat'],'confidence','resp_lr_rep','rt_rep','P_reds_rep');
 
 catch ME
 	sca;

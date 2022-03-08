@@ -5,7 +5,7 @@ To perform the task:
 
 2. Open `main_test_dots.m`, change line 7 to your initial. (E.g. `subjectID = 'BW';`)
 
-3. Run the script. You will be presented with a cloud of dots on each trial. Press left arrow if you think there are more red dots; press right arrow if you think there are more green dots.
+3. Run the script. You will be presented with a cloud of dots on each trial. Press left arrow if you think there are more red dots; press right arrow if you think there are more green dots. Press number 1-5 to indicate how confident you are (You will only be asked to rate your confidence level after a certain number of trials).
 
 4. When finishing, send the files in the `Results` folder to me. They should be `your initial_thresh.mat` and `your initial_1.mat`.
 

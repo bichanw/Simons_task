@@ -1,6 +1,6 @@
 % load all files
 clear;
-subjectID = 'test2';
+subjectID = 'MH';
 P_reds = []; resp_lr = []; rt = [];
 for iFile = 1:numel(dir(['Results/' subjectID '*']))-1
 	load(['Results/' subjectID '_' num2str(iFile) '.mat']);
@@ -14,8 +14,9 @@ end
 % data = [unique(P_reds),...
 % 		arrayfun(@(x) sum(resp_lr(P_reds==x)==80)/sum(P_reds==x), unique(P_reds)),...
 % 		arrayfun(@(x) sum(P_reds==x), unique(P_reds))];
+correct_resp = 37;
 data = [unique(P_reds);...
-		arrayfun(@(x) sum(resp_lr(P_reds==x)==80)/sum(P_reds==x), unique(P_reds));...
+		arrayfun(@(x) sum(resp_lr(P_reds==x)==correct_resp)/sum(P_reds==x), unique(P_reds));...
 		arrayfun(@(x) sum(P_reds==x), unique(P_reds))]';
 addpath('psignifit');
 options=struct;
