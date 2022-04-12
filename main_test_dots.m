@@ -4,14 +4,14 @@ close all;
 clear;
 
 % enter subject info
-subjectID = 'test';
+subjectID = 'BW_700';
 starting_coherence = 0.6;
 
 % Here we call some default settings for setting up Psychtoolbox
 HideCursor;
 InitializeMatlabOpenGL;
 screenInfo.bckgnd = 128;
-screenInfo.setRect = [];
+screenInfo.setRect = [0 0 1000 700];
 Screen('Preference', 'SkipSyncTests', 2 );
 [screenInfo.curWindow, screenInfo.screenRect] = Screen('OpenWindow', 0, screenInfo.bckgnd,screenInfo.setRect);
 ScreenCenter = [screenInfo.screenRect(3)/2 screenInfo.screenRect(4)/2];
@@ -31,7 +31,7 @@ rand('seed', sum(100 * clock));
 % number of trial for psychometric curve
 NRepeats = 100;
 NLevels = 5;
-l_dot = 0.5;
+l_dot = 0.7;
 
 % fixation
 fix_rect = [-10 -3 10 3; -3 -10 3 10];
@@ -101,9 +101,9 @@ set_keys;
 % set up staircase
 Rev = 0;
 StepSize = (starting_coherence-0.5)/5;
-resp_rw = [];
-Xnext = starting_coherence; Coherence = []; 
-P_reds = [];
+resp_rw  = [];
+Xnext    = starting_coherence; Coherence = []; 
+P_reds   = [];
 
 try
 if ~exist('Results')

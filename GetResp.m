@@ -15,7 +15,7 @@ while (Time < dur)
 
     % key is down 
     if sum(keyCode)>0 && (isempty(resp_key) || sum(ismember(find(keyCode),resp_key)))
-        resp = find(keyCode);
+        resp = find(keyCode,1);
         rt   = Time;
         break;
     end

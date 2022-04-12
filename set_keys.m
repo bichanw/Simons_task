@@ -3,10 +3,16 @@ if ismac
 	l_key = KbName('LeftArrow');
 	r_key =  KbName('RightArrow');
 
+	u_key = KbName('UpArrow');
+	d_key = KbName('DownArrow');
+
 else
 	esc_key = KbName('esc');
 	l_key = KbName('left');
 	r_key =  KbName('right');
+
+	u_key = KbName('up');
+	d_key = KbName('down');
 
 end
 
