@@ -84,57 +84,145 @@ P_reds   = [];
 delta_ori = starting_delta_ori;
 
 
-% ------ stimulus presentation ------ %
-base_ori = 0; % horizontal(90) or vertical(0), (randi(2)-1) * 90
-NTrials = 100;
+
+if ~exist(['Results/' subjectID '_gabor_thresh.mat'])
+
+	% ------ staircase ------ %
+	base_ori = 0; % horizontal(90) or vertical(0), (randi(2)-1) * 90
+	NTrials = 100;
+	ori_names = ['l' 'r'];
+
+	% instruction
+	Screen('DrawText',w,'Answer if you see a tilt of the Gabor (y/n)',center_rect(1)-100,center_rect(2)-100);
+	Screen('Flip',w);
+	KbStrokeWait;
+	for gabor_lr = [1 2]
+
+		% set up staircase
+		Rev = 0;
+		StepSize = (starting_delta_ori)/3;
+		resp_rw  = [];
+		Xnext    = starting_delta_ori; 
+		P_reds   = [];
+		delta_ori = starting_delta_ori;
+		T = [];
+		
+		for iTrial = 1:NTrials
+
+			% trial parameters
+			tilt_lr = randi(2)*2-3; % left(1) or right(-1) tilt
+
+			% sample display
+			% fixation
+			Screen('FillRect',w,[0 0 0],fix_rect');
+			t_fix = Screen('Flip', w);
+
+			% target onset
+			Screen('DrawTextures',w,GratPtr,[],gabor_rect(gabor_lr,:)',base_ori+delta_ori*tilt_lr,[],[],[],[],kPsychDontDoRotation,propertiesMat');
+			Screen('FillRect',w,[0 0 0],fix_rect');
+			t_tar_on = Screen('Flip', w, t_fix + 1);
+
+			% target offset
+			Screen('FillRect',w,[0 0 0],fix_rect');
+			t_tar_off = Screen('Flip', w,t_tar_on+0.5);
 
 
+			% response collection
+			[rt,resp] = GetResp(Inf,[esc_key,y_key,n_key]);
+			if resp==esc_key
+				sca;
+				return
+			end
+			resp = (resp==y_key);
+			T = [T;gabor_lr,delta_ori,tilt_lr,resp,rt];
 
-T = [];
-for iTrial = 1:NTrials
+			% staircase
+			[delta_ori,Threshold,Rev,StepSize] = StairCase(T(:,2),T(:,4),2,Rev,StepSize);
+			delta_ori = max([delta_ori 0]);
+			if ~isnan(Threshold)
+				break;
+			end
+			
+			WaitSecs(0.5);
+		end
 
-	% trial parameters
-	gabor_lr = randi(2); % left(1) or right(2) gabor
-	tilt_lr = randi(2)*2-3; % left(1) or right(-1) tilt
-
-	% sample display
-	% fixation
-	Screen('FillRect',w,[0 0 0],fix_rect');
-	t_fix = Screen('Flip', w);
-
-	% target onset
-	% Screen('FillRect',w,sq_color',sq_rect'); % square, commented out
-	Screen('DrawTextures',w,GratPtr,[],gabor_rect(gabor_lr,:)',base_ori+delta_ori*tilt_lr,[],[],[],[],kPsychDontDoRotation,propertiesMat');
-	Screen('FillRect',w,[0 0 0],fix_rect');
-	t_tar_on = Screen('Flip', w, t_fix + 1);
-
-	% target offset
-	Screen('FillRect',w,[0 0 0],fix_rect');
-	t_tar_off = Screen('Flip', w,t_tar_on+0.5);
-
-
-	% response collection
-	[rt,resp] = GetResp(Inf,[esc_key,l_key,r_key]);
-	if resp==esc_key
-		sca;
-		return
+		eval(['T_' ori_names(gabor_lr) ' = array2table(T,''VariableNames'',{''gabor_lr'',''delta_ori'',''tilt_lr'',''resp_lr'',''RT''});'])
+		eval(['Thresh_' ori_names(gabor_lr) ' = Threshold;'])
 	end
-	resp = (resp==l_key)*2 - 1;
-	T = [T;gabor_lr,delta_ori,tilt_lr,resp,rt];
 
-	% staircase
-	[delta_ori,Threshold,Rev,StepSize] = StairCase(T(:,2),T(:,3)==T(:,4),3,Rev,StepSize);
-	delta_ori = max([delta_ori 0]);
-	if ~isnan(Threshold)
-		break;
-	end
-	
-	WaitSecs(0.5);
+	save(['Results/' subjectID '_gabor_thresh.mat'],'T_l','Thresh_l','T_r','Thresh_r');
+	% KbStrokeWait;
+else
+	load(['Results/' subjectID '_gabor_thresh.mat']);
 end
 
-T_out = array2table(T,'VariableNames',{'gabor_lr','delta_ori','tilt_lr','resp_lr','RT'});
-save(['Results/' subjectID '_gabor_thresh.mat'],'T_out','Threshold');
-% KbStrokeWait;
+
+% ------ main task ------ %
+NTrials = 3*5;
+ori_names = ['l' 'r'];
+Colors_block = [255 0 0; 0 255 0]; Attend_loc = {'left','right'};
+
+% instruction
+Screen('DrawText',w,'Which side do you see a tilt (left/right)',center_rect(1)-200,center_rect(2)-50);
+Screen('DrawText',w,'Do not respond if you do not see a tilt',center_rect(1)-200,center_rect(2)-25);
+Screen('Flip',w);
+KbStrokeWait;
+
+for block_lr = [1 2]
+
+	Screen('DrawText',w,['Attend ' Attend_loc{block_lr}],center_rect(1)-50,center_rect(2)-50,Colors_block(block_lr,:));
+	Screen('Flip',w);
+	KbStrokeWait;
+
+	
+	% create initial table
+	eval(['thresh = Thresh_' ori_names(block_lr) ';'])
+	T = [block_lr*ones(NTrials,1),...
+		 repmat([0.2 1 1.5]',NTrials/3,1) * thresh,...
+		 [zeros(NTrials/5,1); ones(NTrials/5*4,1)],... 
+		 randi(2,NTrials,1)*2-3,...
+		 rand(NTrials,1)*0.4+0.3];
+	T = T(randperm(size(T,1)),:);
+	Resps = [];
+	for iTrial = 1:NTrials
+
+		% trial parameters
+		T(iTrial,1) = T(iTrial,3) * T(iTrial,1) + (1-T(iTrial,3)) * (3-T(iTrial,1));
+		base_ori = [0 0]; base_ori(T(iTrial,1)) = base_ori(T(iTrial,1))+delta_ori*T(iTrial,4);
+
+		% sample display
+		% fixation
+		Screen('FillRect',w,[0 0 0],fix_rect');
+		t_fix = Screen('Flip', w);
+
+		% target onset
+		Screen('DrawTextures',w,GratPtr,[],gabor_rect',base_ori,[],[],[],[],kPsychDontDoRotation,propertiesMat');
+		Screen('FillRect',w,[0 0 0],fix_rect');
+		t_tar_on = Screen('Flip', w, t_fix + 1);
+
+		% target offset
+		Screen('FillRect',w,[0 0 0],fix_rect');
+		t_tar_off = Screen('Flip', w,t_tar_on+T(iTrial,5));
+
+
+		% response collection
+		[rt,resp] = GetResp(1.0,[esc_key,l_key,r_key]);
+		if resp==esc_key
+			sca;
+			return
+		end
+		if ~isnan(resp) resp = 2-(resp==l_key); end
+		Resps = [Resps; resp,rt];
+
+		
+		WaitSecs(0.5);
+	end
+
+	% generate table to save
+	eval(['T_' ori_names(block_lr) ' = array2table([T, Resps],''VariableNames'',{''gabor_lr'',''delta_ori'',''valid'',''tilt_lr'',''duration'',''resp_lr'',''RT''});'])
+
+end
+save(['Results/' subjectID '_gabor_main.mat'],'T_l','T_r');
 
 sca;  
 

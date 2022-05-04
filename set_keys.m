@@ -16,5 +16,8 @@ else
 
 end
 
+% keys that are same for mac & windows
+y_key = KbName('y');
+n_key = KbName('n');
 confidence_key = KbName('1!');
 confidence_key = [confidence_key (1:4)+confidence_key esc_key];

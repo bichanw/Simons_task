@@ -1,27 +1,40 @@
 % load all files
 clear; addpath('psignifit');
 
-Subjects = {'BW','XY','MKE','BH','MH'};
-dot_lengths = [250, 500, 700];
+% Subjects = {'BW','XY','MKE','BH','MH'};
+Subjects = {'BW','XY','MKE','BH'};
+dot_lengths = 500; %dot_lengths = [250, 500, 700];
 curve_x = linspace(0.3,0.7,1000);
 Curves = NaN(numel(Subjects),numel(dot_lengths),numel(curve_x));
 
-
-for subject = Subjects
+all_P_reds = []; all_conf = [];
+% ax = np;
+Colors_sub = [0 0.4470 0.7410;0.8500 0.3250 0.0980;0.9290 0.6940 0.1250;0.4940 0.1840 0.5560];
+for isubject = 1:numel(Subjects)
 
 	Colors = [0 0.4470 0.7410; 0.8500 0.3250 0.0980; 0.9290 0.6940 0.1250];
-	ax = np(3,1); set(gcf,'Position',[0 0 207 401]);
+	% ax = np(numel(dot_lengths),1); 
 
 	for l_dot = dot_lengths
-		[P_reds,resp_lr,rt_rep,confidence_rep] = load_data(['../../Results/' subject{1} '_' num2str(l_dot)]);
-		result = fit_psych(resp_lr,P_reds); % fit psychometric curve
+	% for l_dot = 500
+		[P_reds,resp_lr,rt_rep,confidence_rep] = load_data(['../../Results/' Subjects{isubject} '_' num2str(l_dot)]);
+		% result = fit_psych(resp_lr,P_reds); % fit psychometric curve
 
-		% plot confidence rating
-			plt_confidence(P_reds,confidence_rep,result,ax(l_dot==dot_lengths));
-			title(ax(l_dot==dot_lengths),sprintf('%d ms',l_dot));
+		all_P_reds = [all_P_reds;P_reds];
+		all_conf   = [all_conf; confidence_rep'];
+		% plot confidence rating with psychometric curve
+			% plt_curve_conf(result,P_reds,confidence_rep,ax(l_dot==dot_lengths),'c',Colors_sub(isubject,:));
+			% ax.YAxis(1).Color = 'k'; ax.YAxis(2).Color = 'k';
+			% set(gcf,'Position',[0 0 250 500]);
+
+		% plot confidence rating heatmap
+			% plt_confidence(P_reds,confidence_rep,result,ax(l_dot==dot_lengths));
+			% set(gcf,'Position',[0 0 250 600]);
+			% title(ax(l_dot==dot_lengths),sprintf('%d ms',l_dot));
+
 
 		% get fit for all subjects
-			% [~,Curves(cellfun(@(x) strcmp(x,subject{1}),Subjects),l_dot==dot_lengths,:)] = get_y(result,curve_x);
+			% [~,Curves(cellfun(@(x) strcmp(x,Subjects{isubject}),Subjects),l_dot==dot_lengths,:)] = get_y(result,curve_x);
 
 		% plot psychmetric curve
 			% data_color = Colors(l_dot==dot_lengths,:);
@@ -29,15 +42,71 @@ for subject = Subjects
 			% fitline(l_dot==dot_lengths) = plot(result.x,result.y,'Color',data_color);
 	    
 	end
-
-	export_fig(sprintf('../Results/confidence_%s.pdf',subject{1}));
+	
+	% export_fig(sprintf('../Results/confidence_curve_%s.png',Subjects{isubject}),'-m3');
 	% legend(fitline,{'250','500','700'});
 	% title(subjectID);
 end
 return
 save tmp P_reds resp_lr rt_rep confidence_rep result
 
-% transform data
+
+
+
+%% psychometric curve + confidence 
+	load('../Results/all_conf.mat');
+	load('../Results/all_curves.mat');
+	sub_ind = [1 2 3 4 5];
+	Colors = [0 0.4470 0.7410; 0.8500 0.3250 0.0980; 0.9290 0.6940 0.1250];
+
+
+	% calculate points
+	all_P_reds = all_P_reds(:);
+	all_conf   = all_conf(:);
+	bin_edges = 0.3:0.05:0.7;
+	p_bin = discretize(all_P_reds,bin_edges);
+	Ps = bin_edges(1:end-1) + (bin_edges(2)-bin_edges(1))/2;
+	% calculate curve
+	sample_ind = 1:249:1000;
+	sample_y   = squeeze(Curves(sub_ind,:,sample_ind));
+	M = squeeze(mean(sample_y(:,2,:),1));
+	V = squeeze(std(sample_y(:,2,:),[],1));
+
+	ax = np;
+
+	% average trace
+	yyaxis(ax,'left');
+	h_1 = plot(ax,curve_x,squeeze(mean(Curves(sub_ind,2,:),1)),'-','Color',[1 0 0]);
+	errorbar(ax,curve_x(sample_ind),M,V,'.','Color',[1 0 0],'MarkerSize',10,'LineStyle','none','LineWidth',1);
+
+	h_2 = plot(ax,curve_x,1-squeeze(mean(Curves(sub_ind,2,:),1)),'-','Color',[0 1 0]);
+	errorbar(ax,curve_x(sample_ind),1-M,V,'.','Color',[0 1 0],'MarkerSize',10,'LineStyle','none','LineWidth',1);
+
+	set(ax,'YTick',0:0.2:1,'YLim',[0 1.25]);
+	ylabel(ax,'% response');
+	ax.YAxis(1).Color = [0 0 0];
+
+
+	% confidence dots
+	yyaxis(ax,'right');
+	for ip = 1:numel(p_bin)
+		for conf = 1:5
+			sz = sum((p_bin==ip)&(all_conf==conf));
+			if (sz>0)
+				h = scatter(ax,Ps(ip),conf,sz*10,'filled','MarkerFaceColor',[0 0 0],'MarkerFaceAlpha',0.3,'MarkerEdgeColor','none');
+			end
+		end
+	end
+	ax.YAxis(2).Color = [0 0 0];
+	ylabel(ax,{'confidence rating'});
+	set(ax,'YTick',1:5,'YLim',[0 7]);
+
+	% figure setting
+	xlabel(ax,'% red dots');
+	l = legend([h_1 h_2 h],{'Red Response','Green Response','# trs'});
+
+
+return
 
 %% average psychometric curve
 	sub_ind = [1 2 3 4 5];
